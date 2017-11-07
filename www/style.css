@@ -1,0 +1,30 @@
+html, body {
+	height: 100%;
+	margin: 0;
+}
+
+body {
+	overflow-y: hidden;
+}
+
+form {
+	margin: 10px;
+}
+
+.flexRow {
+	display: flex;
+	flex-flow: row;
+}
+
+.flexCol {
+	display: flex;
+	flex-flow: column;
+}
+
+.inputField {
+	flex: 1
+}
+
+#main {
+	flex: 1;
+}
