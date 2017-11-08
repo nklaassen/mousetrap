@@ -4,6 +4,7 @@ import (
     "log"
     "net/http"
 	"encoding/json"
+	"os"
 	"os/exec"
 	"strconv"
 )
@@ -13,6 +14,21 @@ type delta struct {
 	Dy int
 }
 
+type str struct {
+	Text string
+}
+
+func xdo(args ...string) {
+	cmd := exec.Command("xdotool", args...)
+	env := os.Environ()
+	env = append(env, "DISPLAY=:0.0")
+	cmd.Env = env
+	err := cmd.Run()
+	if err != nil {
+		log.Printf("error with xdotool: %v\n", err)
+	}
+}
+
 func handleMoveMouse(w http.ResponseWriter, r *http.Request) {
 	var d delta
 	dec := json.NewDecoder(r.Body)
@@ -20,22 +36,22 @@ func handleMoveMouse(w http.ResponseWriter, r *http.Request) {
 	if err != nil {
 		panic(err)
 	}
-	cmd := exec.Command("xdotool", "mousemove_relative", "--", strconv.Itoa(d.Dx), strconv.Itoa(d.Dy))
-	err = cmd.Run()
-	if err != nil {
-		log.Printf("error with xdotool: %v", err)
-	}
+	xdo("mousemove_relative", "--", strconv.Itoa(d.Dx), strconv.Itoa(d.Dy))
 }
 
 func handleClickMouse(w http.ResponseWriter, r *http.Request) {
-	cmd := exec.Command("xdotool", "click", "1")
-	err := cmd.Run()
-	if err != nil {
-		log.Printf("error with xdotool: %v", err)
-	}
+	xdo("click", "1")
 }
 
 func handleInputText(w http.ResponseWriter, r *http.Request) {
+	var s str
+	dec := json.NewDecoder(r.Body)
+	err := dec.Decode(&s)
+	log.Printf("got text input %s\n", s.Text)
+	if err != nil {
+		panic(err)
+	}
+	xdo("type", s.Text)
 }
 
 func main() {

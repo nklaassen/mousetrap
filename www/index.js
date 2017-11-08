@@ -9,6 +9,22 @@ function startup() {
 	el.addEventListener("touchstart", handleDown, false)
 	el.addEventListener("touchend", handleUp, false)
 	el.addEventListener("touchmove", handleMove, false)
+	el = document.getElementById("textForm")
+	el.onsubmit = formSubmit
+}
+
+function formSubmit(e) {
+	e.preventDefault()
+	var foo = {text: e.target[0].value}
+
+	// construct an HTTP request
+	var xhr = new XMLHttpRequest();
+	xhr.open("post", "/inputtext.go", true);
+	xhr.setRequestHeader('Content-Type', 'application/json; charset=UTF-8');
+
+	// send the collected data as JSON
+	xhr.send(JSON.stringify(foo));
+
 }
 
 function handleDown(e) {
