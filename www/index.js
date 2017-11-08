@@ -16,6 +16,7 @@ function startup() {
 function formSubmit(e) {
 	e.preventDefault()
 	var foo = {text: e.target[0].value}
+	e.target.reset()
 
 	// construct an HTTP request
 	var xhr = new XMLHttpRequest();
@@ -24,7 +25,6 @@ function formSubmit(e) {
 
 	// send the collected data as JSON
 	xhr.send(JSON.stringify(foo));
-
 }
 
 function handleDown(e) {

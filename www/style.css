@@ -6,6 +6,7 @@ html, body {
 
 body {
 	overflow-y: hidden;
+	background-color: #f5f5f5;
 }
 
 form {
@@ -23,7 +24,8 @@ form {
 }
 
 .inputField {
-	flex: 1
+	flex: 1;
+	font-size: 18px;
 }
 
 #main {
