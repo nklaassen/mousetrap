@@ -1,14 +1,18 @@
-var lastX, lastY, date, lastT, downT
+var lastX, lastY, date, lastT, downT, lastScrollY
 
 function startup() {
 	console.log("whatup")
 	lastX = 0
 	lastY = 0
 	date = new Date()
-	el = document.getElementById("main")
-	el.addEventListener("touchstart", handleDown, false)
-	el.addEventListener("touchend", handleUp, false)
-	el.addEventListener("touchmove", handleMove, false)
+	el = document.getElementById("touch")
+	el.addEventListener("touchstart", handleTouchStart, false)
+	el.addEventListener("touchend", handleTouchEnd, false)
+	el.addEventListener("touchmove", handleTouchMove, false)
+	el = document.getElementById("scroll")
+	el.addEventListener("touchstart", handleScrollStart, false)
+	el.addEventListener("touchend", handleScrollMove, false)
+	el.addEventListener("touchmove", handleScrollMove, false)
 	el = document.getElementById("textForm")
 	el.onsubmit = formSubmit
 }
@@ -27,14 +31,36 @@ function formSubmit(e) {
 	xhr.send(JSON.stringify(foo));
 }
 
-function handleDown(e) {
+function handleScrollStart(e) {
+	lastScrollY = Math.floor(e.touches[0].screenY)
+}
+
+function handleScrollMove(e) {
+	e.preventDefault()
+	y = Math.floor(e.touches[0].screenY)
+	dy = y - lastScrollY
+	if(Math.abs(dy) > 5) {
+		// construct an HTTP request
+		var xhr = new XMLHttpRequest();
+		xhr.open(
+			"post",
+			dy > 0 ? "/scrollup.go" : "/scrolldown.go"
+			, true);
+		//send the request
+		xhr.send();
+
+		lastScrollY = y
+	}
+}
+
+function handleTouchStart(e) {
 	lastX = Math.floor(e.touches[0].screenX)
 	lastY = Math.floor(e.touches[0].screenY)
 	lastT = Date.now()
 	downT = lastT
 }
 
-function handleUp(e) {
+function handleTouchEnd(e) {
 	if(Date.now() - downT < 100) {
 		// construct an HTTP request
 		var xhr = new XMLHttpRequest();
@@ -44,17 +70,17 @@ function handleUp(e) {
 	}
 }
 
-function handleMove(e) {
+function handleTouchMove(e) {
+	e.preventDefault()
 	t = Date.now()
 	dt = t - lastT
 
 	x = e.touches[0].screenX
 	y = e.touches[0].screenY
-	dx = 10 * (x - lastX) / dt
-	dy = 10 * (y - lastY) / dt
-	dx = Math.ceil(dx * Math.abs(dx))
-	dy = Math.ceil(dy * Math.abs(dy))
-
+	dx = (x - lastX)// / dt
+	dy = (y - lastY)// / dt
+	dx = Math.ceil(dx * Math.abs(dx) / 4)
+	dy = Math.ceil(dy * Math.abs(dy) / 4)
 	var delta = {dx: dx, dy: dy}
 
 	// construct an HTTP request

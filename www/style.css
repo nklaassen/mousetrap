@@ -6,28 +6,41 @@ html, body {
 
 body {
 	overflow-y: hidden;
-	background-color: #f5f5f5;
-}
-
-form {
-	margin: 10px;
+	background-color: #fefefe;
 }
 
 .flexRow {
-	display: flex;
+	display: inline-flex;
 	flex-flow: row;
+	align-content: stretch;
 }
 
 .flexCol {
 	display: flex;
 	flex-flow: column;
+	align-content: stretch;
 }
 
 .inputField {
-	flex: 1;
 	font-size: 18px;
 }
 
-#main {
+.flexExpand {
 	flex: 1;
+}
+
+#textForm {
+	margin: 10px;
+	margin-bottom: 0;
+}
+
+#scroll {
+	width: 36px;
+}
+
+.scrollbar {
+	background-color: #d8d8d8;
+	width: 8px;
+	border-radius: 8px;
+	margin: 8px auto;
 }

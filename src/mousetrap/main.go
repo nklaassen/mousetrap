@@ -18,6 +18,10 @@ type str struct {
 	Text string
 }
 
+type scroll struct {
+	Dy int
+}
+
 func xdo(args ...string) {
 	cmd := exec.Command("xdotool", args...)
 	env := os.Environ()
@@ -39,6 +43,14 @@ func handleMoveMouse(w http.ResponseWriter, r *http.Request) {
 	xdo("mousemove_relative", "--", strconv.Itoa(d.Dx), strconv.Itoa(d.Dy))
 }
 
+func handleScrollUp(w http.ResponseWriter, r *http.Request) {
+	xdo("click", "4");
+}
+
+func handleScrollDown(w http.ResponseWriter, r *http.Request) {
+	xdo("click", "5");
+}
+
 func handleClickMouse(w http.ResponseWriter, r *http.Request) {
 	xdo("click", "1")
 }
@@ -58,6 +70,8 @@ func main() {
     http.HandleFunc("/movemouse.go", handleMoveMouse);
     http.HandleFunc("/clickmouse.go", handleClickMouse);
     http.HandleFunc("/inputtext.go", handleInputText);
+    http.HandleFunc("/scrollup.go", handleScrollUp);
+    http.HandleFunc("/scrolldown.go", handleScrollDown);
 
     log.Fatal(http.ListenAndServe(":8080", nil))
 }
