@@ -59,11 +59,14 @@ func handleInputText(w http.ResponseWriter, r *http.Request) {
 	var s str
 	dec := json.NewDecoder(r.Body)
 	err := dec.Decode(&s)
-	log.Printf("got text input %s\n", s.Text)
 	if err != nil {
 		panic(err)
 	}
-	xdo("type", s.Text)
+	if s.Text == "" {
+		xdo("key", "Return")
+	} else {
+		xdo("type", s.Text)
+	}
 }
 
 func main() {

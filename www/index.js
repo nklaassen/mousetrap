@@ -11,7 +11,6 @@ function startup() {
 	el.addEventListener("touchmove", handleTouchMove, false)
 	el = document.getElementById("scroll")
 	el.addEventListener("touchstart", handleScrollStart, false)
-	el.addEventListener("touchend", handleScrollMove, false)
 	el.addEventListener("touchmove", handleScrollMove, false)
 	el = document.getElementById("textForm")
 	el.onsubmit = formSubmit
