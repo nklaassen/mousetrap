@@ -27,18 +27,18 @@ func xdo(args ...string) {
 	env := os.Environ()
 	env = append(env, "DISPLAY=:0.0")
 	cmd.Env = env
-	err := cmd.Run()
-	if err != nil {
-		log.Printf("error with xdotool: %v\n", err)
+	if err := cmd.Run(); err != nil {
+		log.Printf("xdotool error: %v\n", err)
+		return
 	}
 }
 
 func handleMoveMouse(w http.ResponseWriter, r *http.Request) {
 	var d delta
 	dec := json.NewDecoder(r.Body)
-	err := dec.Decode(&d)
-	if err != nil {
-		panic(err)
+	if err := dec.Decode(&d); err != nil {
+		log.Printf("json error: %v\n", err)
+		return
 	}
 	xdo("mousemove_relative", "--", strconv.Itoa(d.Dx), strconv.Itoa(d.Dy))
 }
@@ -58,10 +58,9 @@ func handleClickMouse(w http.ResponseWriter, r *http.Request) {
 func handleInputText(w http.ResponseWriter, r *http.Request) {
 	var s str
 	dec := json.NewDecoder(r.Body)
-	err := dec.Decode(&s)
-	log.Printf("got text input %s\n", s.Text)
-	if err != nil {
-		panic(err)
+	if err := dec.Decode(&s); err != nil {
+		log.Printf("json error: %v\n", err)
+		return
 	}
 	xdo("type", s.Text)
 }
