@@ -66,11 +66,11 @@ func handleInputText(w http.ResponseWriter, r *http.Request) {
 }
 
 func main() {
-    http.HandleFunc("/movemouse.go", handleMoveMouse);
-    http.HandleFunc("/clickmouse.go", handleClickMouse);
-    http.HandleFunc("/inputtext.go", handleInputText);
-    http.HandleFunc("/scrollup.go", handleScrollUp);
-    http.HandleFunc("/scrolldown.go", handleScrollDown);
+    http.HandleFunc("/movemouse", handleMoveMouse);
+    http.HandleFunc("/clickmouse", handleClickMouse);
+    http.HandleFunc("/inputtext", handleInputText);
+    http.HandleFunc("/scrollup", handleScrollUp);
+    http.HandleFunc("/scrolldown", handleScrollDown);
 
     log.Fatal(http.ListenAndServe(":8080", nil))
 }

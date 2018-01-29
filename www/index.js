@@ -24,7 +24,7 @@ function formSubmit(e) {
 
 	// construct an HTTP request
 	var xhr = new XMLHttpRequest();
-	xhr.open("post", "/inputtext.go", true);
+	xhr.open("post", "/inputtext", true);
 	xhr.setRequestHeader('Content-Type', 'application/json; charset=UTF-8');
 
 	// send the collected data as JSON
@@ -44,7 +44,7 @@ function handleScrollMove(e) {
 		var xhr = new XMLHttpRequest();
 		xhr.open(
 			"post",
-			dy > 0 ? "/scrollup.go" : "/scrolldown.go"
+			dy > 0 ? "/scrollup" : "/scrolldown"
 			, true);
 		//send the request
 		xhr.send();
@@ -64,7 +64,7 @@ function handleTouchEnd(e) {
 	if(Date.now() - downT < 100) {
 		// construct an HTTP request
 		var xhr = new XMLHttpRequest();
-		xhr.open("post", "/clickmouse.go", true);
+		xhr.open("post", "/clickmouse", true);
 		// send the request
 		xhr.send();
 	}
@@ -85,7 +85,7 @@ function handleTouchMove(e) {
 
 	// construct an HTTP request
 	var xhr = new XMLHttpRequest();
-	xhr.open("post", "/movemouse.go", true);
+	xhr.open("post", "/movemouse", true);
 	xhr.setRequestHeader('Content-Type', 'application/json; charset=UTF-8');
 
 	// send the collected data as JSON
