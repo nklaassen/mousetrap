@@ -18,10 +18,6 @@ type str struct {
 	Text string
 }
 
-type scroll struct {
-	Dy int
-}
-
 func xdo(args ...string) {
 	cmd := exec.Command("xdotool", args...)
 	env := os.Environ()
