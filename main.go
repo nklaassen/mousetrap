@@ -74,5 +74,10 @@ func main() {
 	http.HandleFunc("/scrollup", handleScrollUp);
 	http.HandleFunc("/scrolldown", handleScrollDown);
 
-	log.Fatal(http.ListenAndServe(":8080", nil))
+	portNum := "8080"
+	if len(os.Args) > 1 {
+		portNum = os.Args[1]
+	}
+
+	log.Fatal(http.ListenAndServe(":" + portNum, nil))
 }
