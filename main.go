@@ -1,8 +1,8 @@
 package main
 
 import (
-    "log"
-    "net/http"
+	"log"
+	"net/http"
 	"encoding/json"
 	"os"
 	"os/exec"
@@ -66,11 +66,13 @@ func handleInputText(w http.ResponseWriter, r *http.Request) {
 }
 
 func main() {
-    http.HandleFunc("/movemouse", handleMoveMouse);
-    http.HandleFunc("/clickmouse", handleClickMouse);
-    http.HandleFunc("/inputtext", handleInputText);
-    http.HandleFunc("/scrollup", handleScrollUp);
-    http.HandleFunc("/scrolldown", handleScrollDown);
+	fs := http.FileServer(http.Dir("www"))
+	http.Handle("/", fs)
+	http.HandleFunc("/movemouse", handleMoveMouse);
+	http.HandleFunc("/clickmouse", handleClickMouse);
+	http.HandleFunc("/inputtext", handleInputText);
+	http.HandleFunc("/scrollup", handleScrollUp);
+	http.HandleFunc("/scrolldown", handleScrollDown);
 
-    log.Fatal(http.ListenAndServe(":8080", nil))
+	log.Fatal(http.ListenAndServe(":8080", nil))
 }
