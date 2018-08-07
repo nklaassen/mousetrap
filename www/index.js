@@ -1,9 +1,6 @@
-var lastX, lastY, date, lastT, downT, lastScrollY
+var lastX, lastY, touchStartTime, lastScrollY
 
 function startup() {
-	lastX = 0
-	lastY = 0
-	date = new Date()
 	el = document.getElementById("touch")
 	el.addEventListener("touchstart", handleTouchStart, false)
 	el.addEventListener("touchend", handleTouchEnd, false)
@@ -17,31 +14,20 @@ function startup() {
 
 function formSubmit(e) {
 	e.preventDefault()
-	var foo = {text: e.target[0].value}
+	let foo = {text: e.target[0].value}
 	e.target.reset()
-
-	var xhr = new XMLHttpRequest();
-	xhr.open("post", "/inputtext", true);
-	xhr.setRequestHeader('Content-Type', 'application/json; charset=UTF-8');
-	xhr.send(JSON.stringify(foo));
+	send("/inputtext", JSON.stringify(foo))
 }
 
 function handleScrollStart(e) {
 	lastScrollY = Math.floor(e.touches[0].screenY)
 }
-
 function handleScrollMove(e) {
 	e.preventDefault()
-	y = Math.floor(e.touches[0].screenY)
-	dy = y - lastScrollY
+	let y = Math.floor(e.touches[0].screenY)
+	let dy = y - lastScrollY
 	if(Math.abs(dy) > 5) {
-		var xhr = new XMLHttpRequest();
-		xhr.open(
-			"post",
-			dy > 0 ? "/scrollup" : "/scrolldown"
-			, true);
-		xhr.send();
-
+		send(dy > 0 ? "/scrollup" : "/scrolldown")
 		lastScrollY = y
 	}
 }
@@ -49,39 +35,36 @@ function handleScrollMove(e) {
 function handleTouchStart(e) {
 	lastX = Math.floor(e.touches[0].screenX)
 	lastY = Math.floor(e.touches[0].screenY)
-	lastT = Date.now()
-	downT = lastT
+	touchStartTime = Date.now()
 }
-
 function handleTouchEnd(e) {
-	if(Date.now() - downT < 100) {
-		var xhr = new XMLHttpRequest();
-		xhr.open("post", "/clickmouse", true);
-		xhr.send();
+	if(Date.now() - touchStartTime < 100) {
+		send("/clickmouse")
 	}
 }
-
 function handleTouchMove(e) {
 	e.preventDefault()
-	t = Date.now()
-	dt = t - lastT
+	let x = e.touches[0].screenX
+	let y = e.touches[0].screenY
 
-	x = e.touches[0].screenX
-	y = e.touches[0].screenY
-	dx = (x - lastX)// / dt
-	dy = (y - lastY)// / dt
+	let dx = (x - lastX)
 	dx = dx * Math.abs(dx) / 4
 	dx = dx > 0 ? Math.ceil(dx) : Math.floor(dx)
+
+	let dy = (y - lastY)
 	dy = dy * Math.abs(dy) / 4
 	dy = dy > 0 ? Math.ceil(dy) : Math.floor(dy)
-	var delta = {dx: dx, dy: dy}
 
-	var xhr = new XMLHttpRequest();
-	xhr.open("post", "/movemouse", true);
-	xhr.setRequestHeader('Content-Type', 'application/json; charset=UTF-8');
-	xhr.send(JSON.stringify(delta));
+	let delta = {dx: dx, dy: dy}
+	send("/movemouse", JSON.stringify(delta))
 
 	lastX = x
 	lastY = y
 	lastT = t
+}
+
+function send(url, msg) {
+	let xhr = new XMLHttpRequest()
+	xhr.open("post", url, true)
+	xhr.send(msg)
 }
