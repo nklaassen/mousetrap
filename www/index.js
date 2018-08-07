@@ -70,8 +70,10 @@ function handleTouchMove(e) {
 	y = e.touches[0].screenY
 	dx = (x - lastX)// / dt
 	dy = (y - lastY)// / dt
-	dx = Math.ceil(dx * Math.abs(dx) / 4)
-	dy = Math.ceil(dy * Math.abs(dy) / 4)
+	dx = dx * Math.abs(dx) / 4
+	dx = dx > 0 ? Math.ceil(dx) : Math.floor(dx)
+	dy = dy * Math.abs(dy) / 4
+	dy = dy > 0 ? Math.ceil(dy) : Math.floor(dy)
 	var delta = {dx: dx, dy: dy}
 
 	var xhr = new XMLHttpRequest();
