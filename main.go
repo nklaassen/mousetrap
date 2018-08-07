@@ -1,9 +1,9 @@
 package main
 
 import (
-    "log"
-    "net/http"
 	"encoding/json"
+	"log"
+	"net/http"
 	"os"
 	"os/exec"
 	"strconv"
@@ -18,37 +18,33 @@ type str struct {
 	Text string
 }
 
-type scroll struct {
-	Dy int
-}
-
 func xdo(args ...string) {
 	cmd := exec.Command("xdotool", args...)
 	env := os.Environ()
 	env = append(env, "DISPLAY=:0.0")
 	cmd.Env = env
-	err := cmd.Run()
-	if err != nil {
-		log.Printf("error with xdotool: %v\n", err)
+	if err := cmd.Run(); err != nil {
+		log.Printf("xdotool error: %v\n", err)
+		return
 	}
 }
 
 func handleMoveMouse(w http.ResponseWriter, r *http.Request) {
 	var d delta
 	dec := json.NewDecoder(r.Body)
-	err := dec.Decode(&d)
-	if err != nil {
-		panic(err)
+	if err := dec.Decode(&d); err != nil {
+		log.Printf("json error: %v\n", err)
+		return
 	}
 	xdo("mousemove_relative", "--", strconv.Itoa(d.Dx), strconv.Itoa(d.Dy))
 }
 
 func handleScrollUp(w http.ResponseWriter, r *http.Request) {
-	xdo("click", "4");
+	xdo("click", "4")
 }
 
 func handleScrollDown(w http.ResponseWriter, r *http.Request) {
-	xdo("click", "5");
+	xdo("click", "5")
 }
 
 func handleClickMouse(w http.ResponseWriter, r *http.Request) {
@@ -58,9 +54,9 @@ func handleClickMouse(w http.ResponseWriter, r *http.Request) {
 func handleInputText(w http.ResponseWriter, r *http.Request) {
 	var s str
 	dec := json.NewDecoder(r.Body)
-	err := dec.Decode(&s)
-	if err != nil {
-		panic(err)
+	if err := dec.Decode(&s); err != nil {
+		log.Printf("json error: %v\n", err)
+		return
 	}
 	if s.Text == "" {
 		xdo("key", "Return")
@@ -70,11 +66,18 @@ func handleInputText(w http.ResponseWriter, r *http.Request) {
 }
 
 func main() {
-    http.HandleFunc("/movemouse.go", handleMoveMouse);
-    http.HandleFunc("/clickmouse.go", handleClickMouse);
-    http.HandleFunc("/inputtext.go", handleInputText);
-    http.HandleFunc("/scrollup.go", handleScrollUp);
-    http.HandleFunc("/scrolldown.go", handleScrollDown);
+	fs := http.FileServer(http.Dir("www"))
+	http.Handle("/", fs)
+	http.HandleFunc("/movemouse", handleMoveMouse)
+	http.HandleFunc("/clickmouse", handleClickMouse)
+	http.HandleFunc("/inputtext", handleInputText)
+	http.HandleFunc("/scrollup", handleScrollUp)
+	http.HandleFunc("/scrolldown", handleScrollDown)
 
-    log.Fatal(http.ListenAndServe(":8080", nil))
+	portNum := "8080"
+	if len(os.Args) > 1 {
+		portNum = os.Args[1]
+	}
+
+	log.Fatal(http.ListenAndServe(":"+portNum, nil))
 }
