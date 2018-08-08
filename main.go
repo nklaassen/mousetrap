@@ -7,8 +7,8 @@ import (
 	"os/exec"
 	"strconv"
 
-	"github.com/gorilla/websocket"
 	"github.com/gorilla/handlers"
+	"github.com/gorilla/websocket"
 )
 
 type delta struct {
@@ -16,10 +16,10 @@ type delta struct {
 	Dy int `json:"dy"`
 }
 type data struct {
-	Delta  delta  `json:"delta"`
-	Scroll int    `json:"scroll"`
-	Text   string `json:"text"`
-	Click  bool   `json:"click"`
+	Delta  *delta
+	Text   *string `json:"text"`
+	Scroll *int    `json:"scroll"`
+	Click  bool    `json:"click"`
 }
 
 var (
@@ -46,23 +46,22 @@ func doMoveMouse(d delta) {
 func doScroll(scroll int) {
 	switch scroll {
 	case -1:
-		xdo("click", "4")
-	case 1:
 		xdo("click", "5")
+	case 1:
+		xdo("click", "4")
 	}
 }
 
-func doClick(click bool) {
-	if click {
-		xdo("click", "1")
-	}
+func doClick() {
+	xdo("click", "1")
 }
 
-func doInputText(text string) {
-	if text == "" {
+func doInputText(s string) {
+	switch s {
+	case "":
 		xdo("key", "Return")
-	} else {
-		xdo("type", text)
+	default:
+		xdo("type", s)
 	}
 }
 
@@ -75,17 +74,25 @@ func handleWebSocket(w http.ResponseWriter, r *http.Request) {
 	go func() {
 		defer conn.Close()
 		for {
-			var d data
-			err := conn.ReadJSON(&d)
+			d := new(data)
+			err := conn.ReadJSON(d)
 			if err != nil {
 				log.Printf("websocket read error: %v\n", err)
 				return
 			}
 			log.Println(d)
-			doMoveMouse(d.Delta)
-			doScroll(d.Scroll)
-			doInputText(d.Text)
-			doClick(d.Click)
+			if d.Delta != nil {
+				doMoveMouse(*d.Delta)
+			}
+			if d.Scroll != nil {
+				doScroll(*d.Scroll)
+			}
+			if d.Text != nil {
+				doInputText(*d.Text)
+			}
+			if d.Click {
+				doClick()
+			}
 		}
 	}()
 }
