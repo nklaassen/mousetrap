@@ -8,6 +8,7 @@ import (
 	"strconv"
 
 	"github.com/gorilla/websocket"
+	"github.com/gorilla/handlers"
 )
 
 type delta struct {
@@ -99,5 +100,5 @@ func main() {
 		portNum = os.Args[1]
 	}
 
-	log.Fatal(http.ListenAndServe(":"+portNum, nil))
+	log.Fatal(http.ListenAndServe(":"+portNum, handlers.LoggingHandler(os.Stdout, http.DefaultServeMux)))
 }
