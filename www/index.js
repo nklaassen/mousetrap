@@ -1,4 +1,4 @@
-var ws, lastX, lastY, touchStartTime, lastTouchTime, lastScrollY
+var ws, lastX, lastY, touchStartTime, lastTouchTime, lastScrollY, timerId
 
 function Delta(dx, dy) {
 	return {
@@ -25,14 +25,10 @@ function Click() {
 }
 
 function startup() {
+	timerId = 0
 	let loc = window.location
 	let ws_uri = 'ws://' + loc.host + '/ws'
-	ws = new WebSocket(ws_uri)
-	ws.onopen = () => console.log('ws opened')
-	ws.onclose = () => console.log('ws closed')
-	ws.onerror = (err) => console.log('ws error: ' + err)
-	ws.onmessage = (msg) => console.log('ws: ' + msg.data)
-
+	resetWebSocket(ws_uri)
 	let el = document.getElementById("touch")
 	el.addEventListener("touchstart", handleTouchStart, false)
 	el.addEventListener("touchend", handleTouchEnd, false)
@@ -42,6 +38,21 @@ function startup() {
 	el.addEventListener("touchmove", handleScrollMove, false)
 	el = document.getElementById("textForm")
 	el.onsubmit = handleFormSubmit
+}
+
+function resetWebSocket(ws_uri) {
+	ws = new WebSocket(ws_uri)
+	ws.onopen = () => {
+		if (timerId) {
+			clearInterval(timerId)
+			timerId = 0
+		}
+	}
+	ws.onclose = () => {
+		if (!timerId) {
+			timerId = setInterval(() => resetWebSocket(ws_uri), 3000)
+		}
+	}
 }
 
 function handleFormSubmit(e) {
