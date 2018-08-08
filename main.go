@@ -4,9 +4,8 @@ import (
 	"log"
 	"net/http"
 	"os"
-	"os/exec"
-	"strconv"
 
+	"github.com/go-vgo/robotgo"
 	"github.com/gorilla/handlers"
 	"github.com/gorilla/websocket"
 )
@@ -22,46 +21,36 @@ type data struct {
 	Click  bool    `json:"click"`
 }
 
-var (
-	upgrader = websocket.Upgrader{
-		ReadBufferSize:  512,
-		WriteBufferSize: 16,
-	}
-	env = append(os.Environ(), "DISPLAY=:0.0")
-)
-
-func xdo(args ...string) {
-	cmd := exec.Command("xdotool", args...)
-	cmd.Env = env
-	if err := cmd.Run(); err != nil {
-		log.Printf("xdotool error: %v\n", err)
-		return
-	}
+var upgrader = websocket.Upgrader{
+	ReadBufferSize:  512,
+	WriteBufferSize: 16,
 }
 
 func doMoveMouse(d delta) {
-	xdo("mousemove_relative", "--", strconv.Itoa(d.Dx), strconv.Itoa(d.Dy))
+	x, y := robotgo.GetMousePos()
+	x += d.Dx
+	y += d.Dy
+	robotgo.MoveMouse(x, y)
 }
 
 func doScroll(scroll int) {
-	switch scroll {
-	case -1:
-		xdo("click", "5")
-	case 1:
-		xdo("click", "4")
+	if scroll > 0 {
+		robotgo.ScrollMouse(scroll, "up")
+	} else {
+		robotgo.ScrollMouse(scroll, "down")
 	}
 }
 
 func doClick() {
-	xdo("click", "1")
+	robotgo.MouseClick("left", true)
 }
 
 func doInputText(s string) {
 	switch s {
 	case "":
-		xdo("key", "Return")
+		robotgo.KeyTap("enter")
 	default:
-		xdo("type", s)
+		robotgo.TypeString(s)
 	}
 }
 
@@ -73,9 +62,10 @@ func handleWebSocket(w http.ResponseWriter, r *http.Request) {
 	}
 	go func() {
 		defer conn.Close()
+		var d data
 		for {
-			d := new(data)
-			err := conn.ReadJSON(d)
+			d = data{}
+			err := conn.ReadJSON(&d)
 			if err != nil {
 				log.Printf("websocket read error: %v\n", err)
 				return
