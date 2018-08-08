@@ -1,51 +1,102 @@
-var lastX, lastY, touchStartTime, lastScrollY
+var ws, lastX, lastY, touchStartTime, lastScrollY, moving, scrolling
+
+function Delta(dx, dy) {
+	return {
+		delta: {
+			dx: dx,
+			dy: dy,
+		}
+	}
+}
+function Scroll(scroll) {
+	return {
+		scroll: scroll
+	}
+}
+function Text(text) {
+	return {
+		text: text
+	}
+}
+function Click() {
+	return {
+		click: true
+	}
+}
 
 function startup() {
-	el = document.getElementById("touch")
-	el.addEventListener("touchstart", handleTouchStart, false)
-	el.addEventListener("touchend", handleTouchEnd, false)
-	el.addEventListener("touchmove", handleTouchMove, false)
+	moving = false
+	scrolling = false
+
+	let loc = window.location
+	let ws_uri = 'ws://' + loc.host + '/ws'
+	ws = new WebSocket(ws_uri)
+	ws.onopen = () => console.log('ws opened')
+	ws.onclose = () => console.log('ws closed')
+	ws.onerror = (err) => console.log('ws error: ' + err)
+	ws.onmessage = (msg) => console.log('ws: ' + msg.data)
+
+
+	let el = document.getElementById("touch")
+	el.addEventListener("mousedown", handleTouchStart, false)
+	el.addEventListener("mouseup", handleTouchEnd, false)
+	el.addEventListener("mouseleave", handleTouchEnd, false)
+	el.addEventListener("mousemove", handleTouchMove, false)
 	el = document.getElementById("scroll")
-	el.addEventListener("touchstart", handleScrollStart, false)
-	el.addEventListener("touchmove", handleScrollMove, false)
+	el.addEventListener("mousedown", handleScrollStart, false)
+	el.addEventListener("mousemove", handleScrollMove, false)
+	el.addEventListener("mouseup", handleScrollEnd, false)
+	el.addEventListener("mouseleave", handleScrollEnd, false)
 	el = document.getElementById("textForm")
 	el.onsubmit = formSubmit
 }
 
 function formSubmit(e) {
 	e.preventDefault()
-	let foo = {text: e.target[0].value}
+	let text = Text(e.target[0].value)
 	e.target.reset()
-	send("/inputtext", JSON.stringify(foo))
+	ws.send(JSON.stringify(text))
 }
 
 function handleScrollStart(e) {
-	lastScrollY = Math.floor(e.touches[0].screenY)
+	scrolling = true
+	lastScrollY = Math.floor(e.screenY)
 }
 function handleScrollMove(e) {
 	e.preventDefault()
-	let y = Math.floor(e.touches[0].screenY)
+	if (!scrolling)
+		return
+	let y = Math.floor(e.screenY)
 	let dy = y - lastScrollY
 	if(Math.abs(dy) > 5) {
-		send(dy > 0 ? "/scrollup" : "/scrolldown")
+		ws.send(JSON.stringify(Scroll(dy > 0 ? 1 : -1)))
 		lastScrollY = y
 	}
 }
+function handleScrollEnd(e) {
+	scrolling = false
+}
 
 function handleTouchStart(e) {
-	lastX = Math.floor(e.touches[0].screenX)
-	lastY = Math.floor(e.touches[0].screenY)
+	moving = true
+	console.log('mousedown')
+	lastX = Math.floor(e.screenX)
+	lastY = Math.floor(e.screenY)
 	touchStartTime = Date.now()
 }
 function handleTouchEnd(e) {
+	moving = false
+	console.log('mouseup')
 	if(Date.now() - touchStartTime < 100) {
-		send("/clickmouse")
+		ws.send(JSON.stringify(Click()))
 	}
 }
 function handleTouchMove(e) {
 	e.preventDefault()
-	let x = e.touches[0].screenX
-	let y = e.touches[0].screenY
+	if (!moving)
+		return
+	let x = e.screenX
+	let y = e.screenY
 
 	let dx = (x - lastX)
 	dx = dx * Math.abs(dx) / 4
@@ -55,12 +106,10 @@ function handleTouchMove(e) {
 	dy = dy * Math.abs(dy) / 4
 	dy = dy > 0 ? Math.ceil(dy) : Math.floor(dy)
 
-	let delta = {dx: dx, dy: dy}
-	send("/movemouse", JSON.stringify(delta))
+	ws.send(JSON.stringify(Delta(dx, dy)))
 
 	lastX = x
 	lastY = y
-	lastT = t
 }
 
 function send(url, msg) {

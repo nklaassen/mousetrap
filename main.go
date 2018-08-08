@@ -1,27 +1,36 @@
 package main
 
 import (
-	"encoding/json"
 	"log"
 	"net/http"
 	"os"
 	"os/exec"
 	"strconv"
+
+	"github.com/gorilla/websocket"
 )
 
 type delta struct {
-	Dx int
-	Dy int
+	Dx int `json:"dx"`
+	Dy int `json:"dy"`
+}
+type data struct {
+	Delta  delta  `json:"delta"`
+	Scroll int    `json:"scroll"`
+	Text   string `json:"text"`
+	Click  bool   `json:"click"`
 }
 
-type str struct {
-	Text string
-}
+var (
+	upgrader = websocket.Upgrader{
+		ReadBufferSize:  512,
+		WriteBufferSize: 16,
+	}
+	env = append(os.Environ(), "DISPLAY=:0.0")
+)
 
 func xdo(args ...string) {
 	cmd := exec.Command("xdotool", args...)
-	env := os.Environ()
-	env = append(env, "DISPLAY=:0.0")
 	cmd.Env = env
 	if err := cmd.Run(); err != nil {
 		log.Printf("xdotool error: %v\n", err)
@@ -29,50 +38,61 @@ func xdo(args ...string) {
 	}
 }
 
-func handleMoveMouse(w http.ResponseWriter, r *http.Request) {
-	var d delta
-	dec := json.NewDecoder(r.Body)
-	if err := dec.Decode(&d); err != nil {
-		log.Printf("json error: %v\n", err)
-		return
-	}
+func doMoveMouse(d delta) {
 	xdo("mousemove_relative", "--", strconv.Itoa(d.Dx), strconv.Itoa(d.Dy))
 }
 
-func handleScrollUp(w http.ResponseWriter, r *http.Request) {
-	xdo("click", "4")
-}
-
-func handleScrollDown(w http.ResponseWriter, r *http.Request) {
-	xdo("click", "5")
-}
-
-func handleClickMouse(w http.ResponseWriter, r *http.Request) {
-	xdo("click", "1")
-}
-
-func handleInputText(w http.ResponseWriter, r *http.Request) {
-	var s str
-	dec := json.NewDecoder(r.Body)
-	if err := dec.Decode(&s); err != nil {
-		log.Printf("json error: %v\n", err)
-		return
+func doScroll(scroll int) {
+	switch scroll {
+	case -1:
+		xdo("click", "4")
+	case 1:
+		xdo("click", "5")
 	}
-	if s.Text == "" {
+}
+
+func doClick(click bool) {
+	if click {
+		xdo("click", "1")
+	}
+}
+
+func doInputText(text string) {
+	if text == "" {
 		xdo("key", "Return")
 	} else {
-		xdo("type", s.Text)
+		xdo("type", text)
 	}
+}
+
+func handleWebSocket(w http.ResponseWriter, r *http.Request) {
+	conn, err := upgrader.Upgrade(w, r, nil)
+	if err != nil {
+		log.Printf("websocket upgrade error: %v\n", err)
+		return
+	}
+	go func() {
+		defer conn.Close()
+		for {
+			var d data
+			err := conn.ReadJSON(&d)
+			if err != nil {
+				log.Printf("websocket read error: %v\n", err)
+				return
+			}
+			log.Println(d)
+			doMoveMouse(d.Delta)
+			doScroll(d.Scroll)
+			doInputText(d.Text)
+			doClick(d.Click)
+		}
+	}()
 }
 
 func main() {
 	fs := http.FileServer(http.Dir("www"))
 	http.Handle("/", fs)
-	http.HandleFunc("/movemouse", handleMoveMouse)
-	http.HandleFunc("/clickmouse", handleClickMouse)
-	http.HandleFunc("/inputtext", handleInputText)
-	http.HandleFunc("/scrollup", handleScrollUp)
-	http.HandleFunc("/scrolldown", handleScrollDown)
+	http.HandleFunc("/ws", handleWebSocket)
 
 	portNum := "8080"
 	if len(os.Args) > 1 {
