@@ -42,7 +42,7 @@ func doScroll(scroll int) {
 }
 
 func doClick() {
-	robotgo.MouseClick("left", true)
+	robotgo.MouseClick()
 }
 
 func doInputText(s string) {
