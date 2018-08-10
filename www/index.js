@@ -1,26 +1,32 @@
-var ws, lastX, lastY, touchStartTime, lastTouchTime, lastScrollY, timerId
+var ws, lastX, lastY, touchStart, doubleTouchStart, lastTouch, lastScrollY, timerId
 
-function Delta(dx, dy) {
+function Drag(dx, dy) {
 	return {
-		delta: {
+		drag: {
 			dx: dx,
 			dy: dy
 		}
 	}
 }
-function Scroll(scroll) {
+function Scroll(dy) {
 	return {
-		scroll: scroll
+		scroll: {
+			dy: dy
+		}
 	}
 }
-function Text(text) {
+function Type(text) {
 	return {
-		text: text
+		type: {
+			text: text
+		}
 	}
 }
-function Click() {
+function Click(button) {
 	return {
-		click: true
+		click: {
+			button: button
+		}
 	}
 }
 
@@ -57,7 +63,7 @@ function resetWebSocket(ws_uri) {
 
 function handleFormSubmit(e) {
 	e.preventDefault()
-	let text = Text(e.target[0].value)
+	let text = Type(e.target[0].value)
 	e.target.reset()
 	ws.send(text != '' ? JSON.stringify(text) : '\n')
 }
@@ -76,24 +82,22 @@ function handleScrollMove(e) {
 }
 
 function handleTouchStart(e) {
-	console.log('mousedown')
 	lastX = Math.floor(e.touches[0].screenX)
 	lastY = Math.floor(e.touches[0].screenY)
-	touchStartTime = Date.now()
-	lastTouchTime = touchStartTime
+	touchStart = Date.now()
+	lastTouch = touchStart
 }
 function handleTouchEnd(e) {
-	console.log('mouseup')
-	if(Date.now() - touchStartTime < 100) {
-		ws.send(JSON.stringify(Click()))
+	if(Date.now() - touchStart < 100) {
+		ws.send(JSON.stringify(Click('left')))
 	}
 }
 function handleTouchMove(e) {
 	e.preventDefault()
 
 	let time = Date.now()
-	let dt = time - lastTouchTime
-	lastTouchTime = time
+	let dt = time - lastTouch
+	lastTouch = time
 
 	let x = e.touches[0].screenX
 	let y = e.touches[0].screenY
@@ -106,7 +110,7 @@ function handleTouchMove(e) {
 	dy = 4 * dy * Math.abs(dy) / dt
 	dy = dy > 0 ? Math.ceil(dy) : Math.floor(dy)
 
-	ws.send(JSON.stringify(Delta(dx, dy)))
+	ws.send(JSON.stringify(Drag(dx, dy)))
 
 	lastX = x
 	lastY = y
