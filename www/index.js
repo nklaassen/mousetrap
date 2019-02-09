@@ -65,7 +65,7 @@ function handleFormSubmit(e) {
 	e.preventDefault()
 	let text = Type(e.target[0].value)
 	e.target.reset()
-	ws.send(text != '' ? JSON.stringify(text) : '\n')
+	ws.send(JSON.stringify(text))
 }
 
 function handleScrollStart(e) {
@@ -114,10 +114,4 @@ function handleTouchMove(e) {
 
 	lastX = x
 	lastY = y
-}
-
-function send(url, msg) {
-	let xhr = new XMLHttpRequest()
-	xhr.open("post", url, true)
-	xhr.send(msg)
 }
